@@ -47,10 +47,9 @@ img{max-width:100%}
 /* ---------- app shell ---------- */
 .app{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100%}
 .rail{background:var(--rail-bg);color:var(--rail-fg);padding:22px 18px;display:flex;flex-direction:column;gap:28px;position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));}
-.wordmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
-.wordmark .mark{width:32px;height:32px;border-radius:0;background:transparent}.wordmark .mark img{width:100%;height:100%;object-fit:contain}
-.wordmark .name{font-family:var(--serif);font-weight:600;font-size:19px;letter-spacing:.01em}
-.wordmark .sub{display:block;font-family:var(--sans);font-size:11px;color:var(--rail-fg-dim);font-weight:400;margin-top:-2px}
+.wordmark{display:block;text-decoration:none;color:#fff}
+.wordmark img{height:44px;width:auto;display:block}
+.wordmark .sub{display:block;font-family:var(--sans);font-size:11px;color:var(--rail-fg-dim);font-weight:400;margin-top:4px}
 .client{padding:12px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px}
 .client .lbl{font-size:12px;color:var(--rail-fg-dim)}
 .client .nm{font-weight:600;color:#fff;margin-top:2px}
@@ -94,7 +93,6 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .login{min-height:100vh;display:grid;place-items:center;background:var(--rail-bg);padding:24px}
 .login .card{width:min(420px,100%);background:var(--paper);border-radius:12px;padding:34px 34px 28px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
 .login .card .wordmark{color:var(--ink);margin-bottom:22px}
-.login .card .wordmark .mark{background:transparent}
 .login .card .wordmark .sub{color:var(--slate)}
 .login h1{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 6px}
 .login p{margin:0 0 20px;color:var(--slate);font-size:14px}
@@ -393,7 +391,7 @@ function widget(title,svg,data){
 function railHTML(active){
   const links=Object.values(PUBS).map(p=>`<a href="#edition/${p.id}/${pubEditions(p.id)[0].date}" class="${active===p.id?"on":""}">${p.sub.replace("Pulse by Cortex: ","")}<span class="cad">${p.cadence}</span></a>`).join("");
   return `<aside class="rail" id="rail">
-    <a class="wordmark" href="#home"><span class="mark"><img src="assets/img/cortex-logo-sm.png" alt="Cortex"></span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+    <a class="wordmark" href="#home"><img src="assets/img/cortex-logo-dark.png" alt="Cortex"><span class="sub">Client portal</span></a>
     <div class="client"><div class="lbl">Signed in to</div><div class="nm">${CLIENT.name}</div></div>
     <nav class="nav">
       <a href="#home" class="${active==="home"?"on":""}">Home</a>
@@ -416,7 +414,7 @@ function shell(active,topbar,content,tight){
 
 function viewLogin(){
   return `<div class="login"><div class="card" id="loginCard">
-    <a class="wordmark" href="#login"><span class="mark"><img src="assets/img/cortex-logo-sm.png" alt="Cortex"></span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+    <a class="wordmark" href="#login"><img src="assets/img/cortex-logo-sm.png" alt="Cortex"><span class="sub">Client portal</span></a>
     <h1>Sign in</h1>
     <p>Enter your work email and we’ll send you a one-time link. No password to remember.</p>
     <div class="field"><label for="em">Work email</label><input id="em" type="email" placeholder="you@yourorganization.com" autocomplete="email"></div>
@@ -425,7 +423,7 @@ function viewLogin(){
   </div></div>`;
 }
 function loginSent(email){
-  $("#loginCard").innerHTML=`<a class="wordmark" href="#login"><span class="mark"><img src="assets/img/cortex-logo-sm.png" alt="Cortex"></span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+  $("#loginCard").innerHTML=`<a class="wordmark" href="#login"><img src="assets/img/cortex-logo-sm.png" alt="Cortex"><span class="sub">Client portal</span></a>
     <div class="sent"><div class="env">✉</div><h2>Check your inbox</h2><p>We sent a sign-in link to <b>${esc(email||"your email")}</b>. It expires in 15 minutes.</p>
     <a class="btn primary" href="#home">Continue (prototype: skip the email)</a></div>`;
 }
