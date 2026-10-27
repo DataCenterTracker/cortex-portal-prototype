@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cortex Client Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --navy:#1C2B4A; --navy-deep:#13203A; --brick:#B3423A; --brick-soft:#F3DEDC;
+  --slate:#5B6678; --line:#D5DBE3; --chrome:#EEF1F5; --chrome-2:#E3E8EF;
+  --paper:#FFFFFF; --ink:#1A2233; --ink-soft:#3C4659;
+  --green:#2E7D5B; --yellow:#C8921A;
+  --rail-bg:var(--navy); --rail-fg:#DCE3EF; --rail-fg-dim:#8E9BB5;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --header-h:56px; --rail-w:232px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --chrome:#141B2A; --chrome-2:#1C2436; --line:#2B364C; --slate:#9AA6BC;
+    --ink:#E6EAF2; --ink-soft:#C3CBDA; --brick-soft:#3A2321;
+    --rail-bg:#0E1626; --paper:#1A2233;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --chrome:#141B2A; --chrome-2:#1C2436; --line:#2B364C; --slate:#9AA6BC;
+  --ink:#E6EAF2; --ink-soft:#C3CBDA; --brick-soft:#3A2321;
+  --rail-bg:#0E1626; --paper:#1A2233;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;height:100%;background:var(--chrome);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*,*::before,*::after{box-sizing:inherit}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--brick);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- app shell ---------- */
+.app{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100%}
+.rail{background:var(--rail-bg);color:var(--rail-fg);padding:22px 18px;display:flex;flex-direction:column;gap:28px;position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));}
+.wordmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+.wordmark .mark{width:28px;height:28px;border-radius:7px;background:#fff;color:var(--navy);display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:17px}
+.wordmark .name{font-family:var(--serif);font-weight:600;font-size:19px;letter-spacing:.01em}
+.wordmark .sub{display:block;font-family:var(--sans);font-size:11px;color:var(--rail-fg-dim);font-weight:400;margin-top:-2px}
+.client{padding:12px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px}
+.client .lbl{font-size:12px;color:var(--rail-fg-dim)}
+.client .nm{font-weight:600;color:#fff;margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav .grp{font-size:12px;color:var(--rail-fg-dim);margin:10px 12px 4px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:7px;text-decoration:none;color:var(--rail-fg);font-size:14px}
+.nav a:hover{background:rgba(255,255,255,.07)}
+.nav a.on{background:rgba(255,255,255,.12);color:#fff;box-shadow:inset 3px 0 0 var(--brick)}
+.nav a .cad{margin-left:auto;font-size:11px;color:var(--rail-fg-dim)}
+.rail .foot{margin-top:auto;font-size:12px;color:var(--rail-fg-dim);display:flex;flex-direction:column;gap:8px}
+.rail .foot a{color:var(--rail-fg)}
+.rail .foot .who{color:#fff}
+
+.scrim{display:none}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;height:var(--header-h);background:var(--chrome);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 24px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--chrome)}
+.topbar .crumb{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px;color:var(--slate)}
+.topbar .crumb a{text-decoration:none;color:var(--slate)}
+.topbar .crumb a:hover{color:var(--ink)}
+.topbar .crumb strong{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .spacer{flex:1}
+.topbar .btn{margin-left:0}
+
+.btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:7px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:13.5px;font-weight:500;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--slate)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.primary:hover{background:var(--navy-deep)}
+.btn.icon{width:34px;padding:0;justify-content:center}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--slate)}
+.btn.ghost:hover{color:var(--ink);background:var(--chrome-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;height:34px}
+.seg button{border:0;background:var(--paper);padding:0 11px;font-size:13px;color:var(--slate)}
+.seg button.on{background:var(--navy);color:#fff}
+
+.content{padding:24px;flex:1}
+.content.tight{padding:0}
+
+/* ---------- login ---------- */
+.login{min-height:100vh;display:grid;place-items:center;background:var(--rail-bg);padding:24px}
+.login .card{width:min(420px,100%);background:var(--paper);border-radius:12px;padding:34px 34px 28px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.login .card .wordmark{color:var(--ink);margin-bottom:22px}
+.login .card .wordmark .mark{background:var(--navy);color:#fff}
+.login .card .wordmark .sub{color:var(--slate)}
+.login h1{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 6px}
+.login p{margin:0 0 20px;color:var(--slate);font-size:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;color:var(--ink-soft)}
+.field input,.field select,.field textarea{height:40px;border:1px solid var(--line);border-radius:7px;padding:0 12px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px}
+.field textarea{height:auto;padding:10px 12px}
+.field input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(28,43,74,.15)}
+.login .btn.primary{width:100%;height:40px;justify-content:center}
+.login .fine{margin-top:18px;font-size:12px;color:var(--slate)}
+.login .sent{text-align:center;padding:14px 0 4px}
+.login .sent .env{font-size:36px}
+.login .sent h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:8px 0 6px}
+.login .sent .btn{margin-top:14px}
+
+/* ---------- home ---------- */
+.h1{font-family:var(--serif);font-weight:500;font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+.lede{color:var(--slate);margin:0 0 22px}
+.pubs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.pub{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px 20px 16px;position:relative}
+.pub:hover{border-color:var(--slate)}
+.pub .mast{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.pub .shield{width:40px;height:46px;border-radius:4px 4px 18px 18px;background:var(--navy);display:grid;place-items:center;color:#fff;font-family:var(--serif);font-size:18px;position:relative;flex:none}
+.pub .shield::after{content:"";position:absolute;inset:4px;border:1px solid rgba(255,255,255,.35);border-radius:3px 3px 15px 15px}
+.pub .pname{font-family:var(--serif);font-weight:600;font-size:18px;color:var(--ink)}
+.pub .psub{font-size:13px;color:var(--slate)}
+.pub .latest{border-top:1px solid var(--line);padding-top:12px;display:flex;gap:12px;align-items:flex-start}
+.pub .latest .d{font-size:12px;color:var(--slate);flex:none;width:72px;padding-top:2px}
+.pub .latest .t{color:var(--ink);font-weight:500}
+.pub .latest .s{font-size:13px;color:var(--slate);margin-top:2px}
+.pub .cad{position:absolute;top:18px;right:18px;font-size:12px;color:var(--slate);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:5px}
+.dot.red{background:var(--brick)} .dot.yellow{background:var(--yellow)} .dot.green{background:var(--green)}
+.note{font-size:13px;color:var(--slate);margin-top:22px}
+
+/* ---------- edition ---------- */
+.edition{display:grid;grid-template-columns:minmax(0,3fr) minmax(320px,2fr);height:calc(100vh - var(--header-h) - env(safe-area-inset-top,0px));}
+.edition.above{grid-template-columns:1fr;height:auto}
+.edition.above .viewer{height:calc(100vh - var(--header-h) - env(safe-area-inset-top,0px))}
+.edition.above .panel{position:static;height:auto;border-left:0;border-bottom:1px solid var(--line);max-height:none}
+.edition.above .panel .pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.viewer{position:relative;background:var(--chrome-2);overflow-y:auto;overflow-x:auto;padding:22px 22px 60px}
+.viewer .pages{margin:0 auto;display:flex;flex-direction:column;gap:14px;align-items:center}
+.page{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 10px 30px rgba(20,30,50,.18);position:relative}
+.page canvas{display:block}
+.page .num{position:absolute;right:-30px;top:6px;font-size:11px;color:var(--slate)}
+.page.loading{display:grid;place-items:center;color:var(--slate);font-size:13px}
+.vtools{position:sticky;top:0;z-index:2;display:flex;justify-content:center;margin:-22px -22px 14px;padding:10px 22px;background:linear-gradient(var(--chrome-2) 70%,transparent)}
+.vtools .bar{display:inline-flex;align-items:center;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 6px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.vtools .bar .pg{font-size:13px;color:var(--slate);padding:0 8px;min-width:64px;text-align:center}
+.vtools .bar button{height:28px;min-width:28px;border:0;background:transparent;border-radius:5px;font-size:13px;color:var(--ink-soft);padding:0 8px}
+.vtools .bar button:hover{background:var(--chrome-2)}
+.vempty{margin:40px auto;max-width:520px;background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:28px;text-align:center;color:var(--slate)}
+.vempty strong{display:block;color:var(--ink);font-weight:500;margin-bottom:6px}
+
+.panel{border-left:1px solid var(--line);background:var(--chrome);overflow-y:auto;padding:22px 22px 40px}
+.panel h2{font-family:var(--serif);font-weight:500;font-size:19px;margin:0 0 2px}
+.panel .period{font-size:13px;color:var(--slate);margin-bottom:18px}
+.kpi{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.kpi .n{font-family:var(--serif);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.02em}
+.kpi .l{color:var(--slate);font-size:14px}
+.kpi .delta{font-size:13px;color:var(--green);margin-left:auto}
+.kpi .delta.down{color:var(--brick)}
+.widget{margin-top:22px}
+.widget .wh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.widget .wh h3{font-size:14px;font-weight:500;margin:0;color:var(--ink-soft)}
+.widget .wh button{border:0;background:transparent;font-size:12px;color:var(--slate);padding:2px 4px}
+.widget .wh button:hover{color:var(--ink);text-decoration:underline}
+.widget svg{width:100%;height:auto;display:block}
+.widget table{width:100%;border-collapse:collapse;font-size:13px}
+.widget td{padding:5px 0;border-bottom:1px solid var(--line)}
+.widget td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.widget .hide{display:none}
+.anote{margin-top:22px;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink-soft)}
+.anote .by{font-size:12px;color:var(--slate);margin-bottom:6px}
+.alertbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--brick-soft);border:1px solid rgba(179,66,58,.3);border-radius:8px;margin-bottom:18px;font-size:13.5px}
+.alertbar b{font-weight:600}
+.sections{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.sections button{height:28px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:0 11px;font-size:12.5px;color:var(--ink-soft)}
+.sections button:hover{border-color:var(--navy);color:var(--ink)}
+.jump{position:relative}
+.jump .menu{position:absolute;right:0;top:40px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.15);min-width:200px;padding:6px;z-index:9;display:none}
+.jump.open .menu{display:block}
+.jump .menu button{display:flex;width:100%;justify-content:space-between;border:0;background:transparent;padding:8px 10px;border-radius:6px;font-size:13.5px;text-align:left}
+.jump .menu button:hover{background:var(--chrome-2)}
+.jump .menu button span{color:var(--slate);font-size:12px}
+
+/* ---------- archive ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
+.filters input{height:36px;border:1px solid var(--line);border-radius:7px;padding:0 12px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;min-width:240px;flex:1}
+.filters .chip{height:32px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:0 12px;font-size:13px;color:var(--ink-soft)}
+.filters .chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.month{margin-bottom:28px}
+.month h3{font-family:var(--serif);font-weight:500;font-size:17px;margin:0 0 10px;color:var(--ink)}
+.rows{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--chrome)}
+.row .d{font-size:13px;color:var(--slate)}
+.row .d b{display:block;font-weight:500;color:var(--ink);font-size:14px}
+.row .t{font-weight:500}
+.row .s{font-size:13px;color:var(--slate);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.row .m{font-size:12.5px;color:var(--slate);text-align:right;white-space:nowrap}
+.row .m b{display:block;color:var(--ink);font-weight:500;font-size:14px;font-variant-numeric:tabular-nums}
+.empty{padding:40px;text-align:center;color:var(--slate)}
+
+/* ---------- trends ---------- */
+.tgrid{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.card h3{font-size:14px;font-weight:500;margin:0 0 12px;color:var(--ink-soft)}
+.card svg{width:100%;height:auto;display:block}
+.span-2{grid-column:1/-1}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:500;color:var(--slate);font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 0;border-bottom:1px solid var(--line)}
+.tbl td:last-child,.tbl th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.tbl a{text-decoration:none;color:var(--ink);font-weight:500}
+.tbl a:hover{text-decoration:underline}
+
+/* ---------- admin ---------- */
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;background:var(--paper);color:var(--slate)}
+.drop strong{display:block;color:var(--ink);font-weight:500;font-size:16px;margin-bottom:4px}
+.drop .btn{margin-top:14px}
+.drop.done{border-style:solid;border-color:var(--green)}
+.form .field{margin-bottom:12px}
+.form .two{display:grid;grid-template-columns:1f 1fr;grid-template-columns:1fr 1fr;gap:12px}
+.form .hint{font-size:12px;color:var(--slate)}
+.form .found{font-size:12px;color:var(--green)}
+.actions{display:flex;gap:10px;margin-top:8px}
+.wlist{display:flex;flex-direction:column;gap:8px}
+.witem{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.witem .grab{color:var(--line);font-size:18px;cursor:grab}
+.witem .wt{flex:1}
+.witem .wt b{font-weight:500;display:block}
+.witem .wt span{font-size:12.5px;color:var(--slate)}
+.toggle{width:40px;height:22px;border-radius:999px;background:var(--line);border:0;position:relative;flex:none}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.toggle.on{background:var(--green)}
+.toggle.on::after{transform:translateX(18px)}
+.stat{display:flex;gap:18px;margin-bottom:18px}
+.stat .card{flex:1}
+.stat .card .n{font-family:var(--serif);font-size:30px;font-weight:500;line-height:1.1}
+.stat .card .l{font-size:13px;color:var(--slate)}
+.adm-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+.adm-tabs a{text-decoration:none;color:var(--slate);padding:8px 12px;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.adm-tabs a.on{color:var(--ink);border-color:var(--brick)}
+.proto{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--slate);border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin-left:8px}
+.proto::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--navy-deep);color:#fff;padding:10px 16px;border-radius:8px;font-size:13.5px;opacity:0;pointer-events:none;transition:all .2s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.panel.collapsed{padding-bottom:12px}
+.panel .ptoggle{display:none;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;padding:0 0 8px;font-size:14px;font-weight:500;color:var(--ink)}
+.panel .ptoggle span{color:var(--slate);font-size:12px;font-weight:400}
+
+/* ---------- responsive ---------- */
+.menu-btn{display:none}
+@media (max-width:1023px){
+  .app{grid-template-columns:1fr}
+  .rail{position:fixed;left:0;top:0;bottom:0;width:min(280px,85vw);z-index:20;transform:translateX(-100%);transition:transform .2s;height:100vh;padding-top:calc(22px + env(safe-area-inset-top,0px))}
+  .rail.open{transform:none}
+  .scrim.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:19}
+  .menu-btn{display:inline-flex}
+  .edition{grid-template-columns:1fr;height:auto}
+  .panel{border-left:0;border-bottom:1px solid var(--line);max-height:none;order:-1}
+  .panel.collapsed .pbody{display:none}
+  .panel .ptoggle{display:flex}
+  .viewer{height:calc(100vh - var(--header-h) - env(safe-area-inset-top,0px));padding:14px 10px 60px}
+  .page .num{display:none}
+  .vtools{margin:-14px -10px 10px;padding:8px 10px}
+  .tgrid,.agrid{grid-template-columns:1fr}
+  .row{grid-template-columns:72px 1fr}
+  .row .m{display:none}
+  .content{padding:16px}
+  .topbar{padding:0 12px}
+  .topbar .hide-m{display:none}
+  .topbar .crumb span{white-space:nowrap}
+  .topbar .btn .lbl-l{display:none}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== DATA (prototype) ===================== */
+const PDF_URL = "assets/newsletters/data-centers-work-2026-10-22.pdf";
+
+const CLIENT = { name:"Data Centers Work", contact:"AJ Reichelt, Cortex" };
+
+const PUBS = {
+  "dcw-daily": {
+    id:"dcw-daily", name:"Data Centers Work", sub:"Pulse by Cortex: Daily Brief", cadence:"Daily", letter:"D",
+    desc:"Insights, analysis, and the state of play of the data center debate in Alabama and Georgia.",
+    alerts:true
+  },
+  "dcw-weekly": {
+    id:"dcw-weekly", name:"Data Centers Work", sub:"Pulse by Cortex: Weekly Pulse", cadence:"Weekly", letter:"W",
+    desc:"Sentiment, channel performance, and what to expect in the week ahead.",
+    alerts:false
+  }
+};
+
+const EDITIONS = [
+  { pub:"dcw-daily", date:"2026-10-23", title:"Daily Brief for 10/23", alert:"green", mentions:5880, read:"5.5 mins",
+    summary:"Prologis responds to the Coweta petition; Fairfield schedules its C-PACE work session; FERC comment period opens." },
+  { pub:"dcw-daily", date:"2026-10-22", title:"Daily Brief for 10/22", alert:"yellow", mentions:6605, read:"6.5 mins", words:1721, pdf:true,
+    summary:"Lowndes residents sue over $1.1B Project Red Clay abatements; Coweta petition with 14,000+ signatures seeks a first-of-its-kind election; Memphis passes a 135-day pause.",
+    sections:[["Alabama",2],["Georgia",4],["Southern States",5],["On The Radar",6],["Coverage Spotlight",8],["National News",10]] },
+  { pub:"dcw-daily", date:"2026-10-21", title:"Daily Brief for 10/21", alert:"red", mentions:7120, read:"7 mins",
+    summary:"Lowndes commission meets in special session on Project Red Clay minutes; Bessemer mayor sends QTS a cease-and-desist; AL.com cartoon goes viral." },
+  { pub:"dcw-daily", date:"2026-10-20", title:"Daily Brief for 10/20", alert:"yellow", mentions:6210, read:"6 mins",
+    summary:"Coweta County residents file petition with 14,000 signatures; Powering Georgia's Future files $2.5M in PSC race spending." },
+  { pub:"dcw-daily", date:"2026-10-19", title:"Daily Brief for 10/19", alert:"green", mentions:4980, read:"5 mins",
+    summary:"Weekend recap: Childersburg council weighs ammunition-plant sale; Meta tours Huntsville facility for local TV." },
+  { pub:"dcw-daily", date:"2026-10-16", title:"Daily Brief for 10/16", alert:"green", mentions:4310, read:"5.5 mins",
+    summary:"Effingham commission schedules oversight vote for Project Camellia; Florida counties advance moratoria." },
+  { pub:"dcw-daily", date:"2026-10-15", title:"Daily Brief for 10/15", alert:"yellow", mentions:5540, read:"6 mins",
+    summary:"Lowndes commission approves $1.1B abatement in 10-minute meeting; both lieutenant governor nominees react." },
+  { pub:"dcw-daily", date:"2026-10-14", title:"Daily Brief for 10/14", alert:"green", mentions:4120, read:"5 mins",
+    summary:"Nebius homeowners' suit heads toward March trial date; Applied Digital signs Boyce, La., community benefit agreement." },
+  { pub:"dcw-daily", date:"2026-09-30", title:"Daily Brief for 9/30", alert:"green", mentions:3870, read:"5 mins",
+    summary:"Memphis council takes up first moratorium draft; Shelby County schedules its own rules hearing." },
+  { pub:"dcw-daily", date:"2026-09-29", title:"Daily Brief for 9/29", alert:"green", mentions:3610, read:"4.5 mins",
+    summary:"Alabama Poll fieldwork wraps; Google–Entergy grid agreement announced in Arkansas." },
+  { pub:"dcw-weekly", date:"2026-10-19", title:"Week of Oct 19", alert:null, mentions:31400, read:"9 mins",
+    summary:"Sentiment turns sharply negative in Alabama after the Lowndes vote; Florida volume driven by county moratoria." },
+  { pub:"dcw-weekly", date:"2026-10-12", title:"Week of Oct 12", alert:null, mentions:24900, read:"8 mins",
+    summary:"Coverage steady; TV broadcast overtakes online news as the leading channel for the first time this quarter." },
+  { pub:"dcw-weekly", date:"2026-10-05", title:"Week of Oct 5", alert:null, mentions:21200, read:"8 mins",
+    summary:"Georgia PSC race spending enters the data center conversation; Memphis council deadlocks." },
+];
+
+const ANALYTICS = {
+  "dcw-daily/2026-10-22": {
+    period:"Oct 16 – Oct 22, 2026", total:6605, prev:7120,
+    trend:[["Oct 16",850],["Oct 17",640],["Oct 18",394],["Oct 19",1250],["Oct 20",1450],["Oct 21",1150],["Oct 22",870]],
+    source:[["TV broadcast",2577],["Online news",2574],["X",734],["Radio",373],["Facebook",138],["YouTube",94],["Instagram",70],["Other",45]],
+    region:[["Florida",965],["Alabama",604],["Louisiana",458],["Tennessee",382],["Georgia",340],["Mississippi",92]],
+    note:"Volume dipped to a weekly low of 394 mentions on Oct. 18, then surged Oct. 19–21, peaking at 1,450 on Oct. 20. Online news and TV broadcast were split almost evenly and together made up nearly 80% of the total. Florida led the region by a wide margin."
+  }
+};
+
+/* ===================== UTIL ===================== */
+const $ = (s,el=document)=>el.querySelector(s);
+const fmt = n=>n.toLocaleString("en-US");
+const dfmt = (iso,opts={month:"short",day:"numeric",year:"numeric"})=>new Date(iso+"T12:00:00").toLocaleDateString("en-US",opts);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let toastT; function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600); }
+function proto(e){ if(e) e.preventDefault(); toast("Prototype: this button isn’t wired up yet."); }
+function pubEditions(pub){ return EDITIONS.filter(e=>e.pub===pub).sort((a,b)=>b.date.localeCompare(a.date)); }
+function getEdition(pub,date){ return EDITIONS.find(e=>e.pub===pub&&e.date===date); }
+const alertLabel={red:"Red alert",yellow:"Yellow alert",green:"Green"};
+
+/* ===================== SVG CHARTS ===================== */
+function lineChart(data){
+  const W=420,H=160,pl=36,pr=22,pt=12,pb=26;
+  const max=Math.max(...data.map(d=>d[1]))*1.1;
+  const x=i=>pl+(W-pl-pr)*i/(data.length-1);
+  const y=v=>pt+(H-pt-pb)*(1-v/max);
+  const pts=data.map((d,i)=>`${x(i)},${y(d[1])}`).join(" ");
+  const area=`M${x(0)},${H-pb} L${pts.split(" ").join(" L")} L${x(data.length-1)},${H-pb} Z`;
+  const ticks=[0,.5,1].map(f=>{const v=Math.round(max*f/100)*100;return `<g><line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--slate)">${fmt(v)}</text></g>`}).join("");
+  const labels=data.map((d,i)=>`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--slate)">${d[0]}</text>`).join("");
+  const dots=data.map((d,i)=>`<circle cx="${x(i)}" cy="${y(d[1])}" r="3" fill="var(--navy)" stroke="var(--paper)" stroke-width="1.5"><title>${d[0]}: ${fmt(d[1])}</title></circle>`).join("");
+  const peak=data.reduce((a,d,i)=>d[1]>data[a][1]?i:a,0);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily mentions">
+    ${ticks}
+    <path d="${area}" fill="var(--navy)" opacity=".08"/>
+    <polyline points="${pts}" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}
+    <text x="${x(peak)}" y="${y(data[peak][1])-9}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">${fmt(data[peak][1])}</text>
+    ${labels}
+  </svg>`;
+}
+function barChart(data,accentIdx=-1){
+  const W=420,rowH=22,pl=96,H=data.length*rowH+4;
+  const max=Math.max(...data.map(d=>d[1]));
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Breakdown">${data.map((d,i)=>{
+    const w=(W-pl-52)*d[1]/max, y=i*rowH+2;
+    return `<g><text x="${pl-8}" y="${y+14}" text-anchor="end" font-size="12" fill="var(--ink-soft)">${esc(d[0])}</text>
+      <rect x="${pl}" y="${y+3}" width="${w}" height="${rowH-8}" rx="2" fill="${i===accentIdx?"var(--brick)":"var(--navy)"}" opacity="${i===accentIdx?1:0.9-i*0.07}"><title>${esc(d[0])}: ${fmt(d[1])}</title></rect>
+      <text x="${pl+w+6}" y="${y+14}" font-size="11" fill="var(--slate)">${fmt(d[1])}</text></g>`}).join("")}</svg>`;
+}
+function tableOf(data){ return `<table>${data.map(d=>`<tr><td>${esc(d[0])}</td><td>${fmt(d[1])}</td></tr>`).join("")}</table>`; }
+function widget(title,svg,data){
+  const id="w"+Math.random().toString(36).slice(2,7);
+  return `<div class="widget" data-w="${id}"><div class="wh"><h3>${title}</h3><button data-toggle="${id}">Show as table</button></div><div class="chart">${svg}</div><div class="tbl hide">${tableOf(data)}</div></div>`;
+}
+
+/* ===================== VIEWS ===================== */
+function railHTML(active){
+  const links=Object.values(PUBS).map(p=>`<a href="#edition/${p.id}/${pubEditions(p.id)[0].date}" class="${active===p.id?"on":""}">${p.sub.replace("Pulse by Cortex: ","")}<span class="cad">${p.cadence}</span></a>`).join("");
+  return `<aside class="rail" id="rail">
+    <a class="wordmark" href="#home"><span class="mark">C</span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+    <div class="client"><div class="lbl">Signed in to</div><div class="nm">${CLIENT.name}</div></div>
+    <nav class="nav">
+      <a href="#home" class="${active==="home"?"on":""}">Home</a>
+      <div class="grp">Your publications</div>
+      ${links}
+      <div class="grp">More</div>
+      <a href="#archive/dcw-daily" class="${active==="archive"?"on":""}">Archive</a>
+      <a href="#trends/dcw-daily" class="${active==="trends"?"on":""}">Trends</a>
+    </nav>
+    <div class="foot">
+      <span><span class="who">Jordan Hale</span><br>jordan@example.com</span>
+      <a href="#admin">Switch to Cortex staff view</a>
+      <a href="#login">Sign out</a>
+    </div>
+  </aside><div class="scrim" id="scrim"></div>`;
+}
+function shell(active,topbar,content,tight){
+  return `<div class="app">${railHTML(active)}<div class="main"><header class="topbar"><button class="btn icon menu-btn" id="menuBtn" aria-label="Menu">☰</button>${topbar}</header><div class="content ${tight?"tight":""}">${content}</div></div></div>`;
+}
+
+function viewLogin(){
+  return `<div class="login"><div class="card" id="loginCard">
+    <a class="wordmark" href="#login"><span class="mark">C</span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+    <h1>Sign in</h1>
+    <p>Enter your work email and we’ll send you a one-time link. No password to remember.</p>
+    <div class="field"><label for="em">Work email</label><input id="em" type="email" placeholder="you@yourorganization.com" autocomplete="email"></div>
+    <button class="btn primary" id="sendLink">Email me a sign-in link</button>
+    <div class="fine">Access is limited to addresses your Cortex analyst has registered. Every view and download is logged.</div>
+  </div></div>`;
+}
+function loginSent(email){
+  $("#loginCard").innerHTML=`<a class="wordmark" href="#login"><span class="mark">C</span><span><span class="name">Cortex</span><span class="sub">Client portal</span></span></a>
+    <div class="sent"><div class="env">✉</div><h2>Check your inbox</h2><p>We sent a sign-in link to <b>${esc(email||"your email")}</b>. It expires in 15 minutes.</p>
+    <a class="btn primary" href="#home">Continue (prototype: skip the email)</a></div>`;
+}
+
+function viewHome(){
+  const cards=Object.values(PUBS).map(p=>{const e=pubEditions(p.id)[0];return `<a class="pub" href="#edition/${p.id}/${e.date}">
+    <span class="cad">${p.cadence}</span>
+    <div class="mast"><div class="shield">${p.letter}</div><div><div class="pname">${p.name}</div><div class="psub">${p.sub}</div></div></div>
+    <div class="latest"><div class="d">${dfmt(e.date,{month:"short",day:"numeric"})}</div><div><div class="t">${e.alert&&p.alerts?`<span class="dot ${e.alert}"></span>`:""}${e.title}</div><div class="s">${esc(e.summary)}</div></div></div>
+  </a>`}).join("");
+  return shell("home",`<div class="crumb"><strong>Home</strong></div>`,`
+    <h1 class="h1">Good morning, Jordan.</h1>
+    <p class="lede">Two publications are active for ${CLIENT.name}. The latest edition of each is below.</p>
+    <div class="pubs">${cards}</div>
+    <p class="note">New editions appear here within minutes of being sent by email. Your Cortex analyst: ${CLIENT.contact}.</p>`);
+}
+
+function viewEdition(pubId,date){
+  const pub=PUBS[pubId]; const eds=pubEditions(pubId); const ed=getEdition(pubId,date)||eds[0];
+  const idx=eds.indexOf(ed); const prev=eds[idx+1]; const next=eds[idx-1];
+  const an=ANALYTICS[`${pubId}/${ed.date}`];
+  const layout=(()=>{try{return localStorage.getItem("layout")||"beside"}catch(e){return "beside"}})();
+  const top=`<div class="crumb"><a href="#archive/${pubId}" class="hide-m">Archive</a><span class="hide-m">/</span><strong>${pub.sub}</strong><span class="hide-m">/</span><span>${dfmt(ed.date)}</span></div>
+    <div class="spacer"></div>
+    <div class="seg hide-m" title="Where the analytics panel sits"><button data-layout="beside" class="${layout==="beside"?"on":""}">Beside</button><button data-layout="above" class="${layout==="above"?"on":""}">Above</button></div>
+    ${ed.sections?`<div class="jump hide-m" id="jump"><button class="btn" id="jumpBtn">Jump to ▾</button><div class="menu">${ed.sections.map(s=>`<button data-page="${s[1]}">${s[0]}<span>p. ${s[1]}</span></button>`).join("")}</div></div>`:""}
+    <a class="btn" href="${ed.pdf?PDF_URL:"#"}" ${ed.pdf?`download="Data-Centers-Work-${ed.date}.pdf"`:`data-proto`}><span class="lbl-l">Download </span>PDF</a>
+    <a class="btn icon" href="${prev?`#edition/${pubId}/${prev.date}`:"#"}" ${prev?"":"aria-disabled=true disabled"} title="Previous edition">‹</a>
+    <a class="btn icon" href="${next?`#edition/${pubId}/${next.date}`:"#"}" ${next?"":"aria-disabled=true disabled"} title="Next edition">›</a>`;
+
+  const viewer=ed.pdf?`<div class="vtools"><div class="bar"><button data-zoom="-">−</button><button data-zoom="fit">Fit width</button><button data-zoom="+">+</button><span class="pg" id="pg">1 / —</span></div></div><div class="pages" id="pages"></div>`
+    :`<div class="vempty"><strong>${ed.title}</strong>The prototype only includes the real PDF for Oct 22, 2026. In the live portal this edition’s newsletter would render here, exactly as exported from Axios HQ.<br><br><a class="btn" href="#edition/${pubId}/2026-10-22">Open the Oct 22 sample</a></div>`;
+
+  let panel;
+  if(an){
+    const delta=an.prev?Math.round((an.total-an.prev)/an.prev*100):null;
+    panel=`<h2>On the radar</h2><div class="period">Media mentions, ${an.period}</div>
+      ${pub.alerts&&ed.alert&&ed.alert!=="green"?`<div class="alertbar"><span class="dot ${ed.alert}"></span><span><b>${alertLabel[ed.alert]}.</b> Lowndes lawsuit and Coweta petition are developing; response deliberation recommended.</span></div>`:""}
+      ${ed.sections?`<div class="sections">${ed.sections.map(s=>`<button data-page="${s[1]}">${s[0]}</button>`).join("")}</div>`:""}
+      <div class="kpi"><span class="n">${fmt(an.total)}</span><span class="l">mentions</span>${delta!==null?`<span class="delta ${delta<0?"down":""}">${delta>0?"▲":"▼"} ${Math.abs(delta)}% vs. previous edition</span>`:""}</div>
+      <div class="pgrid">
+      ${widget("Mentions per day",lineChart(an.trend),an.trend)}
+      ${widget("By source",barChart(an.source),an.source)}
+      ${widget("By state",barChart(an.region,0),an.region)}
+      </div>
+      <div class="anote"><div class="by">Analyst note</div>${esc(an.note)}</div>`;
+  } else {
+    panel=`<h2>On the radar</h2><div class="period">${ed.title}</div>
+      <div class="kpi"><span class="n">${fmt(ed.mentions)}</span><span class="l">mentions</span></div>
+      <div class="vempty" style="margin:18px 0 0"><strong>Charts not loaded for this edition</strong>In the live portal, importing this edition’s Meltwater export fills this panel. The Oct 22 sample shows the full set.</div>`;
+  }
+  const collapsed=pub.cadence==="Daily"?"collapsed":"";
+  const content=`<div class="edition ${layout}" id="edition">
+    <div class="viewer" id="viewer">${viewer}</div>
+    <aside class="panel ${collapsed}" id="panel"><button class="ptoggle" id="ptoggle">On the radar<span>${collapsed?"Show":"Hide"}</span></button><div class="pbody">${panel}</div></aside>
+  </div>`;
+  return shell(pubId,top,content,true);
+}
+
+function viewArchive(pubId,q="",filt="all"){
+  const pub=PUBS[pubId]; let eds=pubEditions(pubId);
+  if(q) eds=eds.filter(e=>(e.title+" "+e.summary).toLowerCase().includes(q.toLowerCase()));
+  if(filt!=="all") eds=eds.filter(e=>e.alert===filt);
+  const months={}; eds.forEach(e=>{const k=dfmt(e.date,{month:"long",year:"numeric"});(months[k]=months[k]||[]).push(e)});
+  const list=Object.entries(months).map(([m,arr])=>`<div class="month"><h3>${m}</h3><div class="rows">${arr.map(e=>`<a class="row" href="#edition/${pubId}/${e.date}">
+    <div class="d"><b>${dfmt(e.date,{month:"short",day:"numeric"})}</b>${dfmt(e.date,{weekday:"short"})}</div>
+    <div><div class="t">${e.alert&&pub.alerts?`<span class="dot ${e.alert}"></span>`:""}${e.title}</div><div class="s">${esc(e.summary)}</div></div>
+    <div class="m"><b>${fmt(e.mentions)}</b>mentions · ${e.read}</div></a>`).join("")}</div></div>`).join("")||`<div class="empty">No editions match. Try a different word.</div>`;
+  const pubsel=Object.values(PUBS).map(p=>`<button class="chip ${p.id===pubId?"on":""}" data-pub="${p.id}">${p.cadence}</button>`).join("");
+  return shell("archive",`<div class="crumb"><strong>Archive</strong><span>/</span><span>${pub.sub}</span></div>`,`
+    <h1 class="h1">Archive</h1><p class="lede">Every edition of ${pub.sub}, newest first.</p>
+    <div class="filters"><input id="q" type="search" placeholder="Search titles and summaries" value="${esc(q)}">${pubsel}
+      ${pub.alerts?`<span style="width:1px;height:24px;background:var(--line)"></span>${["all","red","yellow","green"].map(f=>`<button class="chip ${filt===f?"on":""}" data-filt="${f}">${f==="all"?"All alerts":`<span class="dot ${f}"></span>${f[0].toUpperCase()+f.slice(1)}`}</button>`).join("")}`:""}
+      <button class="chip" data-proto>Date range</button><button class="chip" data-proto>Calendar view</button></div>
+    ${list}`);
+}
+
+function viewTrends(pubId){
+  const pub=PUBS[pubId]; const eds=pubEditions(pubId).slice(0,8).reverse();
+  const series=eds.map(e=>[dfmt(e.date,{month:"short",day:"numeric"}),e.mentions]);
+  const src=[["TV broadcast",38],["Online news",37],["X",12],["Radio",6],["Social (other)",5],["Print",2]];
+  const rows=eds.slice().reverse().map(e=>`<tr><td><a href="#edition/${pubId}/${e.date}">${e.title}</a></td><td>${dfmt(e.date)}</td><td>${e.alert&&pub.alerts?`<span class="dot ${e.alert}"></span>${alertLabel[e.alert]}`:"—"}</td><td>${fmt(e.mentions)}</td></tr>`).join("");
+  return shell("trends",`<div class="crumb"><strong>Trends</strong><span>/</span><span>${pub.sub}</span></div><div class="spacer"></div><div class="seg"><button class="on">30 days</button><button data-proto>90 days</button><button data-proto>Year</button></div>`,`
+    <h1 class="h1">Trends</h1><p class="lede">Mention volume across the last ${eds.length} editions. <span class="proto">Prototype data</span></p>
+    <div class="tgrid">
+      <div class="card"><h3>Total mentions per edition</h3>${lineChart(series)}</div>
+      <div class="card"><h3>Source mix, last 30 days (%)</h3>${barChart(src)}</div>
+      <div class="card span-2"><h3>Editions in range</h3><table class="tbl"><tr><th>Edition</th><th>Date</th><th>Alert</th><th>Mentions</th></tr>${rows}</table></div>
+    </div>`);
+}
+
+function viewAdmin(tab="upload"){
+  const tabs=`<div class="adm-tabs">${[["upload","Upload an edition"],["imports","Import Meltwater CSV"],["widgets","Charts"],["clients","Clients & users"],["log","Access log"]].map(t=>`<a href="#admin/${t[0]}" class="${tab===t[0]?"on":""}">${t[1]}</a>`).join("")}</div>`;
+  let body="";
+  if(tab==="upload"){
+    body=`<div class="agrid">
+      <div><div class="drop done" id="drop"><strong>data-centers-work-2026-10-22.pdf</strong>12 pages · 578 KB · read in 1.2 s<br><span style="font-size:13px">Drop a different Axios HQ export to replace it</span><br><button class="btn" data-proto>Choose file</button></div>
+        <div class="drop" style="margin-top:14px"><strong>Meltwater CSV for this edition</strong>Optional. Drop the export here and the charts fill in automatically.<br><button class="btn" data-proto>Choose file</button></div></div>
+      <div class="form">
+        <div class="field"><label>Publication <span class="found">· matched from the title line</span></label><select><option>Data Centers Work — Daily Brief</option><option>Data Centers Work — Weekly Pulse</option></select></div>
+        <div class="two"><div class="field"><label>Edition date <span class="found">· found</span></label><input value="2026-10-22"></div><div class="field"><label>Title <span class="found">· found</span></label><input value="Daily Brief for 10/22"></div></div>
+        <div class="two"><div class="field"><label>Read time <span class="found">· found</span></label><input value="6.5 mins"></div><div class="field"><label>Word count <span class="found">· found</span></label><input value="1,721"></div></div>
+        <div class="field"><label>Sections <span class="found">· 6 found from “In this edition”</span></label><input value="Alabama p2, Georgia p4, Southern States p5, On The Radar p6, Coverage Spotlight p8, National News p10"></div>
+        <div class="field"><label>Alert level</label><select><option>Yellow</option><option>Red</option><option>Green</option><option>None</option></select><span class="hint">Shown because alerts are turned on for this publication.</span></div>
+        <div class="field"><label>Summary <span class="hint">· optional, shown on archive cards</span></label><textarea rows="3">Lowndes residents sue over $1.1B Project Red Clay abatements; Coweta petition with 14,000+ signatures seeks a first-of-its-kind election; Memphis passes a 135-day pause.</textarea></div>
+        <div class="actions"><button class="btn primary" data-proto>Publish to portal</button><button class="btn" data-proto>Save as draft</button></div>
+      </div></div>`;
+  } else if(tab==="imports"){
+    body=`<div class="agrid"><div class="drop"><strong>Drop a Meltwater export (.csv)</strong>Column mapping is remembered per publication, so the second upload is one click.<br><button class="btn" data-proto>Choose file</button></div>
+      <div class="form"><div class="field"><label>Last import</label><div class="card" style="padding:12px 14px;font-size:13.5px">data-centers-work_meltwater_10-16_10-22.csv<br><span class="hint">6,605 rows · mapped with “Meltwater default” · attached to Oct 22</span></div></div>
+      <div class="field"><label>Saved mappings for Data Centers Work</label><div class="card" style="padding:12px 14px;font-size:13.5px">Date → Date<br>Source Type → Source type (aliases: Twitter → X, Broadcast → TV broadcast)<br>State → Region<br>Sentiment → Sentiment<br>Reach → Reach</div></div></div></div>`;
+  } else if(tab==="widgets"){
+    const ws=[["Headline total with change vs. previous edition","Number",true],["Mentions per day","Line, by day",true],["By source","Bar, by source type, top 8",true],["By state","Bar, by region",true],["Sentiment","Pie, by sentiment",false],["Top outlets","Bar, by source name, top 10",false],["Analyst note","Text",true]];
+    body=`<p class="lede">Charts shown on every edition of <b>Data Centers Work — Daily Brief</b>. Drag to reorder, switch off anything the client doesn’t need. No code involved.</p>
+      <div class="wlist">${ws.map(w=>`<div class="witem"><span class="grab">⋮⋮</span><div class="wt"><b>${w[0]}</b><span>${w[1]}</span></div><button class="btn ghost" data-proto>Edit</button><button class="toggle ${w[2]?"on":""}" data-tog aria-label="Toggle"></button></div>`).join("")}</div>
+      <div class="actions" style="margin-top:14px"><button class="btn" data-proto>Add a chart</button><button class="btn ghost" data-proto>Reset to defaults</button></div>`;
+  } else if(tab==="clients"){
+    body=`<div class="stat"><div class="card"><div class="n">2</div><div class="l">Clients</div></div><div class="card"><div class="n">4</div><div class="l">Publications</div></div><div class="card"><div class="n">11</div><div class="l">Client users</div></div></div>
+      <table class="tbl"><tr><th>Client</th><th>Publications</th><th>Allowed email domains</th><th>Alerts</th><th>Users</th></tr>
+      <tr><td><a href="#admin/clients">Data Centers Work</a></td><td>Daily Brief, Weekly Pulse</td><td>fulcrumintel.com</td><td>Daily on · Weekly off</td><td>3</td></tr>
+      <tr><td><a href="#admin/clients">Ballad Health</a></td><td>Daily, Weekly</td><td>balladhealth.org</td><td>Off</td><td>8</td></tr></table>
+      <div class="actions" style="margin-top:16px"><button class="btn primary" data-proto>Add a client</button><button class="btn" data-proto>Invite a user</button></div>`;
+  } else {
+    const log=[["Oct 27, 8:02 AM","Jordan Hale","Data Centers Work","Daily Brief for 10/23","Viewed"],["Oct 27, 8:04 AM","Jordan Hale","Data Centers Work","Daily Brief for 10/23","Downloaded PDF"],["Oct 26, 5:41 PM","M. Alvarez","Ballad Health","Week of Oct 19","Viewed"],["Oct 26, 9:15 AM","Jordan Hale","Data Centers Work","Daily Brief for 10/22","Viewed"],["Oct 23, 11:20 AM","J. Patel","Ballad Health","Daily for 10/23","Viewed"]];
+    body=`<p class="lede">Every view and download, by user. Exportable for a client on request.</p><table class="tbl"><tr><th>When</th><th>User</th><th>Client</th><th>Edition</th><th>Action</th></tr>${log.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table><div class="actions" style="margin-top:14px"><button class="btn" data-proto>Export CSV</button></div>`;
+  }
+  const html=shell("admin",`<div class="crumb"><strong>Cortex staff</strong><span class="proto">Prototype</span></div><div class="spacer"></div><a class="btn" href="#home">Back to client view</a>`,`<h1 class="h1">Cortex staff</h1>${tabs}${body}`);
+  return html.replace('<div class="client"><div class="lbl">Signed in to</div><div class="nm">Data Centers Work</div></div>','<div class="client"><div class="lbl">Signed in as</div><div class="nm">AJ Reichelt · Cortex</div></div>');
+}
+
+/* ===================== PDF VIEWER ===================== */
+let pdfDoc=null, scale=null, pageEls=[], renderedScale={}; let archQ="", archFilt="all";
+async function mountPdf(){
+  const pages=$("#pages"); if(!pages) return;
+  const viewer=$("#viewer");
+  if(!window.pdfjsLib){ pages.innerHTML=`<iframe src="${PDF_URL}" style="width:100%;height:calc(100vh - 140px);border:0;border-radius:4px;background:#fff"></iframe>`; return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  try{ pdfDoc=await pdfjsLib.getDocument(PDF_URL).promise; }
+  catch(e){ pages.innerHTML=`<div class="vempty"><strong>Couldn’t load the PDF</strong>${esc(e.message||e)}</div>`; return; }
+  $("#pg").textContent=`1 / ${pdfDoc.numPages}`;
+  const first=await pdfDoc.getPage(1);
+  const base=first.getViewport({scale:1});
+  const fit=()=>Math.min((viewer.clientWidth-44)/base.width, 1.6);
+  scale=fit();
+  pageEls=[]; pages.innerHTML="";
+  for(let i=1;i<=pdfDoc.numPages;i++){
+    const el=document.createElement("div"); el.className="page loading"; el.dataset.page=i;
+    el.style.width=Math.floor(base.width*scale)+"px"; el.style.height=Math.floor(base.height*scale)+"px";
+    el.innerHTML=`<span>Page ${i}</span><span class="num">${i}</span>`;
+    pages.appendChild(el); pageEls.push(el);
+  }
+  const io=new IntersectionObserver(entries=>{entries.forEach(en=>{ if(en.isIntersecting) renderPage(+en.target.dataset.page); })},{root:viewer,rootMargin:"600px 0px"});
+  pageEls.forEach(el=>io.observe(el));
+  viewer.addEventListener("scroll",()=>{ // page indicator
+    let best=1,bd=1e9; pageEls.forEach(el=>{const d=Math.abs(el.getBoundingClientRect().top-viewer.getBoundingClientRect().top-40); if(d<bd){bd=d;best=+el.dataset.page}});
+    $("#pg").textContent=`${best} / ${pdfDoc.numPages}`;
+  },{passive:true});
+  viewer.querySelectorAll("[data-zoom]").forEach(b=>b.addEventListener("click",()=>{
+    const z=b.dataset.zoom; scale=z==="fit"?fit():z==="+"?Math.min(scale*1.2,3):Math.max(scale/1.2,.4); rezoom(base);
+  }));
+  let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{ if(Math.abs(scale-fit())<.01||scale>fit()){scale=fit();rezoom(base)} },150)});
+}
+function rezoom(base){
+  renderedScale={};
+  pageEls.forEach(el=>{ el.style.width=Math.floor(base.width*scale)+"px"; el.style.height=Math.floor(base.height*scale)+"px"; const c=el.querySelector("canvas"); if(c) c.remove(); el.classList.add("loading"); });
+  const viewer=$("#viewer"); const top=viewer.getBoundingClientRect().top;
+  pageEls.forEach(el=>{ const r=el.getBoundingClientRect(); if(r.bottom>top-600&&r.top<top+viewer.clientHeight+600) renderPage(+el.dataset.page); });
+}
+async function renderPage(n){
+  if(!pdfDoc||renderedScale[n]===scale) return; renderedScale[n]=scale;
+  const el=pageEls[n-1]; const page=await pdfDoc.getPage(n);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const vp=page.getViewport({scale:scale*dpr});
+  const canvas=document.createElement("canvas"); canvas.width=vp.width; canvas.height=vp.height;
+  canvas.style.width=Math.floor(vp.width/dpr)+"px"; canvas.style.height=Math.floor(vp.height/dpr)+"px";
+  await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+  if(renderedScale[n]!==scale) return;
+  const old=el.querySelector("canvas"); if(old) old.remove();
+  el.classList.remove("loading"); el.querySelector("span:not(.num)")?.remove(); el.prepend(canvas);
+}
+function goPage(n){ const el=pageEls[n-1]; if(!el){toast("Open the Oct 22 sample to jump between sections.");return;} const v=$("#viewer"); v.scrollTo({top:el.offsetTop-v.offsetTop-10,behavior:"smooth"}); }
+
+/* ===================== ROUTER ===================== */
+function route(){
+  const h=(location.hash||"#login").slice(1); const [v,a,b]=h.split("/");
+  const root=$("#root"); window.scrollTo(0,0);
+  if(v==="login"||v===""){ root.innerHTML=viewLogin(); $("#sendLink").onclick=()=>loginSent($("#em").value); $("#em").addEventListener("keydown",e=>{if(e.key==="Enter")loginSent($("#em").value)}); return; }
+  if(v==="home") root.innerHTML=viewHome();
+  else if(v==="edition"&&PUBS[a]) root.innerHTML=viewEdition(a,b);
+  else if(v==="archive") root.innerHTML=viewArchive(PUBS[a]?a:"dcw-daily",archQ,archFilt);
+  else if(v==="trends") root.innerHTML=viewTrends(PUBS[a]?a:"dcw-daily");
+  else if(v==="admin") root.innerHTML=viewAdmin(a||"upload");
+  else { location.hash="#home"; return; }
+  wire(v,a);
+}
+function wire(v,pubId){
+  const rail=$("#rail"),scrim=$("#scrim"),mb=$("#menuBtn");
+  if(mb){ mb.onclick=()=>{rail.classList.add("open");scrim.classList.add("show")}; scrim.onclick=()=>{rail.classList.remove("open");scrim.classList.remove("show")}; rail.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{rail.classList.remove("open");scrim.classList.remove("show")})); }
+  document.querySelectorAll("[data-proto]").forEach(el=>el.addEventListener("click",proto));
+  document.querySelectorAll("[data-tog]").forEach(el=>el.addEventListener("click",()=>{el.classList.toggle("on");toast(el.classList.contains("on")?"Chart turned on (prototype)":"Chart turned off (prototype)")}));
+  document.querySelectorAll("[data-toggle]").forEach(b=>b.addEventListener("click",()=>{const w=b.closest(".widget");const t=w.querySelector(".tbl").classList.toggle("hide");w.querySelector(".chart").classList.toggle("hide",!t);b.textContent=t?"Show as table":"Show as chart"}));
+  if(v==="edition"){
+    mountPdf();
+    document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>{goPage(+b.dataset.page);$("#jump")?.classList.remove("open")}));
+    const j=$("#jump"); if(j){ $("#jumpBtn").onclick=e=>{e.stopPropagation();j.classList.toggle("open")}; document.addEventListener("click",()=>j.classList.remove("open"),{once:true}); }
+    document.querySelectorAll("[data-layout]").forEach(b=>b.addEventListener("click",()=>{try{localStorage.setItem("layout",b.dataset.layout)}catch(e){} $("#edition").className="edition "+b.dataset.layout; document.querySelectorAll("[data-layout]").forEach(x=>x.classList.toggle("on",x===b));window.dispatchEvent(new Event("resize")); }));
+    const pt=$("#ptoggle"); if(pt) pt.onclick=()=>{const p=$("#panel");p.classList.toggle("collapsed");pt.querySelector("span").textContent=p.classList.contains("collapsed")?"Show":"Hide"};
+    document.querySelectorAll('a[disabled]').forEach(a=>a.addEventListener("click",e=>e.preventDefault()));
+    document.onkeydown=e=>{ if(e.target.tagName==="INPUT")return; if(e.key==="ArrowLeft"){const a=document.querySelector('a[title="Previous edition"]:not([disabled])');a&&a.click()} if(e.key==="ArrowRight"){const a=document.querySelector('a[title="Next edition"]:not([disabled])');a&&a.click()} };
+  } else document.onkeydown=null;
+  if(v==="archive"){
+    const pid=pubId||"dcw-daily";
+    const q=$("#q");
+    q.addEventListener("input",()=>{ archQ=q.value; const pos=q.selectionStart; $("#root").innerHTML=viewArchive(pid,archQ,archFilt); wire("archive",pid); const nq=$("#q"); nq.focus(); nq.setSelectionRange(pos,pos); });
+    document.querySelectorAll("[data-filt]").forEach(b=>b.addEventListener("click",()=>{ archFilt=b.dataset.filt; $("#root").innerHTML=viewArchive(pid,archQ,archFilt); wire("archive",pid); }));
+    document.querySelectorAll("[data-pub]").forEach(b=>b.addEventListener("click",()=>{ archQ=""; archFilt="all"; location.hash="#archive/"+b.dataset.pub; }));
+  }
+}
+window.addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
